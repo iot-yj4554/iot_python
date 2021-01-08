@@ -1,0 +1,1 @@
+ index_name = lines[0].split(',')
