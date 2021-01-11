@@ -2,6 +2,7 @@
 # Mission : config.ini 에 담긴 정보를 읽어서 원하는 형태의 파일로 저장 후 불러오기
 
 import sys
+import traceback
 
 def load_config():
     config = {}
@@ -12,16 +13,27 @@ def load_config():
             config[line.split('=')[0]] = line.split('=')[1]
     return config
 
+
 def load(fpath, encoding):
     with open(fpath, 'rt', encoding=encoding) as f:
         return f.readlines()
 
+
 def make_book(lines):
     book = {}
+    book_index = lines[0].replace('\n','').split(',')
     for line in lines[1:]:
         line = line.replace('\n','').split(',')
         book[line[0]] = line[1:]
-    return book
+    return book, book_index
+
+
+def init():
+    config = load_config()
+    lines = load(config['FNAME'], config['ENCODING'])
+    book, book_index = make_book(lines)
+    return book, config, book_index
+
 
 def select_menu():
     print()
@@ -29,6 +41,7 @@ def select_menu():
     menu = int(input('입력 : '))
     print()
     return menu
+
 
 # menu mode 1
 def print_book(book):
@@ -39,6 +52,7 @@ def print_book(book):
     for name in names:
         print(f'{name} : {book[name][0]}, {book[name][1]}, {book[name][2]}')
 
+
 # menu mode 2
 def print_detail(book):
     name = input('찾는 사람의 이름을 입력하세요 : ') # 완전 일치 검색
@@ -47,6 +61,7 @@ def print_detail(book):
     else:
         print(f'{name} 님은 목록에 없습니다.')
     print()
+
 
 # menu mode 3 -> data update 반드시 필요
 def add_entry(book):
@@ -62,8 +77,9 @@ def add_entry(book):
     print()
     print('등록이 완료되었습니다.')
 
+
 # menu mode 4 -> data update 반드시 필요
-def modify_entry(book):
+def update_entry(book):
     name = input('수정할 이름을 입력하세요 : ')
     if name not in book.keys():
         print(f'{name}은 목록에 없습니다.')
@@ -74,6 +90,7 @@ def modify_entry(book):
     book[name][modify_num-1] = modify_data
     print()
     print('수정이 완료되었습니다.')
+
 
 # menu mode 5 -> data update 반드시 필요
 def del_entry(book):
@@ -86,41 +103,65 @@ def del_entry(book):
     print(f'{name} 님이 삭제되었습니다.')
 
 
+def save(book,fpath,encoding, book_index):
+    with open(fpath, 'wt', encoding=encoding) as f:
+        f.write(','.join(book_index) + '\n')
+        for k,v in book.items():
+            line = k + ',' + ','.join(v) + '\n'
+            f.write(line)
+
+
+def exit(book, fpath, encoding, book_index):
+    if input('정말로 종료하시겠습니까? y/n: ') == 'n':
+        return
+    save(book, fpath, encoding, book_index)
+    sys.exit(0)
+
+
+def run(menu, book, config, book_index):
+    if menu == 1:  # 목록
+        print_book(book)
+    elif menu == 2: # 상세보기
+        print_detail(book)
+    elif menu == 3: # 추가
+        add_entry(book)
+    elif menu == 4: # 수정
+        update_entry(book)
+    elif menu == 5: #삭제
+        del_entry(book)
+    elif menu == 6: # 종료
+        exit(book, config['FNAME'], config['ENCODING'], book_index)
+    else:
+        print('잘못 선택하였습니다. 다시 선택해 주세요.')
 
 
 def main():
     try:
-        config = load_config()
-        lines = load(config['FNAME'], config['ENCODING'])
-        book = make_book(lines)
-
+        book, config, book_index = init()
         while True:
             menu = select_menu()
-
-            if menu == 1: # 목록
-                print_book(book)
-            elif menu == 2: # 상세보기
-                print_detail(book)
-            elif menu == 3: # 추가
-                add_entry(book)
-            elif menu == 4: # 수정
-                modify_entry(book)
-            elif menu == 5: #삭제
-                del_entry(book)
-            elif menu == 6: # 종료
-                print('종료합니다.')
-                sys.exit(0)
-            else:
-                print('잘못 선택하였습니다. 다시 선택해 주세요.')
-
+            run(menu, book, config, book_index)
     except Exception as e:
         print('예외 발생', e)
+        traceback.print_stack() # 예외 위치까지 오는데 거친 함수 목록을 출력
+        traceback.print_exc() # 구체적인 예외 내용을 출력
 
 main()
 
-# 0108 memo
-# 1. 메뉴 선택 시, 숫자가 아닌 다른 것을 입력하면 잘못 입력하였다는 메세지 대신 오류가 뜨게됨
-# 2. 파일 업데이트 하는 과정 필요
+# refactoring
+# 구조화 (structure/계층화) / Tree 구조   <--->   평탄(평평)하다 flat
+
+# main
+#     init
+#         load_config
+#         load
+#         make_book
+#     select_menu
+#     run
+#         add_entry
+#         del_entry
+#         :
+#         :
 
 
 # 이차원 딕셔너리 만드는 것 -> 나중에 해보기
