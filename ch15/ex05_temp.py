@@ -16,9 +16,6 @@ class Configuration:
                 config[key.strip()] = value.strip()
         return config
 
-    def __str__(self):
-        return f'<Configuration fname : {self.fname} / Encoding : {self.encoding}>'
-
 
 # 한 사람 주소 정보 담당
 class AddressBookEntry():
@@ -45,7 +42,22 @@ class AddressBook:
                     entry = AddressBookEntry(name, phone, email, addr)
                     self.book.append(entry)
         
-        # 정렬을 하지만 key 값을 주지 않으면'참조값'으로 정렬됨
+        self.book.sort(key=lambda a: a.name)
+
+    def add(self, name, phone, email, addr):
+        entry = AddressBookEntry(name, phone, email, addr)
+        self.book.append(entry)
+        self.book.sort(key=lambda a: a.name)
+
+    def delete(self, index):
+        del self.book[index]
+
+    def update(self, index, name, phone, email, addr):
+        self.book[index].name = name
+        self.book[index].phone = phone
+        self.book[index].email = email
+        self.book[index].addr = addr
+
         self.book.sort(key=lambda a: a.name)
 
 
@@ -87,19 +99,53 @@ class Application:
             print(f'{ix+1:02d}. {entry.name} : {entry.phone}, {entry.email}, {entry.address}')
 
     def print_detail(self):
-        pass
+        index = int(input('대상 선택 (번호): '))
+        entry = self.addressbook.book[index-1]
+        print()
+        print(f'이름 : {entry.name}')
+        print(f'전화번호 : {entry.phone}')
+        print(f'이메일 : {entry.email}')
+        print(f'주소 : {entry.addr}')
+        # 이름으로 찾는것도 해보기
 
     def add(self):
-        pass
+        print('새 주소록 항목 추가')
+        name = input('이름 : ')
+        phone = input('전화번호 : ')
+        email = input('이메일 : ')
+        addr = input('주소 : ')
+        self.addressbook.add(name, phone, email, addr)
+        print('등록이 완료되었습니다.')
 
     def update(self):
-        pass
+        index = int(input('대상 선택 (번호): '))
+        entry = self.addressbook.book[index-1]
+        print('주소록 항목 수정')
 
+        name = input(f'이름({entry.name}) -> ')
+        if name.strip() == '':
+            name = entry.name
+        phone = input(f'전화번호({entry.phone}) -> ')
+        if phone.strip() == '':
+            phone = entry.phone
+        email = input(f'이메일({entry.email}) -> ')
+        if email.strip() == '':
+            email = entry.email
+        addr = input(f'주소({entry.addr}) -> ')
+        if addr.strip() == '':
+            addr = entry.addr
+        
+        self.addressbook.update(index-1, name, phone, email, addr)
+        
     def delete(self):
-        pass
+        index = int(input('대상 선택 (번호): '))
+        entry = self.addressbook.book[index-1]
+        if input(f'{entry.name}님을 정말로 삭제할까요? (y/n) ') == 'y':
+            self.addressbook.delete(index-1)
 
     def exit(self):
         sys.exit(0)
+
 
 # main 함수
 def main():
