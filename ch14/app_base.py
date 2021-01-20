@@ -8,9 +8,6 @@ class Configuration:
         self.fname = config['FNAME']
         self.encoding = config['ENCODING']
 
-    def __str__(self):
-        return f'<Configuration fname : {self.fname} / Encoding : {self.encoding}>'
-
 
 class MenuItem:
     def __init__(self, title, func):
@@ -37,6 +34,7 @@ class Menu:
         for ix, menu_item in enumerate(self.menu_items):
             print(f'{ix}) {menu_item.title}', end='  ')
         print()
+        print()
         menu = int(input('입력 : '))
         return menu
 
@@ -54,7 +52,7 @@ class Application:
         self.config = self.load()
         self.menu = Menu()
         self.create_menu(self.menu)
-
+    
     def load(self):
         config = {}
         with open('config.ini', 'rt') as f:
